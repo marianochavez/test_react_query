@@ -3,7 +3,7 @@ import type { Issue, State } from "../interfaces/issue";
 import { githubApi } from "../../api/githubApi";
 import { useQuery } from "@tanstack/react-query";
 import { sleep } from "../../helpers/sleep";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Props = {
   state?: State;
@@ -40,6 +40,12 @@ const getIssues = async ({
 export const useIssues = ({ state, labels }: Props) => {
   const [page, setPage] = useState(1);
 
+  // cada vez que cambian el state o labels voy a volver a la pagina 1
+  useEffect(() => {
+    setPage(1);
+  }, [state, labels])
+  
+
   const issuesQuery = useQuery(["issues", { state, labels, page }], () =>
     getIssues({ labels, state, page })
   );
@@ -54,5 +60,15 @@ export const useIssues = ({ state, labels }: Props) => {
     if (page > 1) setPage(page - 1);
   };
 
-  return { issuesQuery, page, nextPage, prevPage };
+  return { 
+    // Properties
+    issuesQuery, 
+
+    // Getter
+    page: issuesQuery.isFetching ? 'Loading' : page, 
+
+    // Methods
+    nextPage, 
+    prevPage,
+  };
 };
